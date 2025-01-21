@@ -48,14 +48,19 @@ func NewDiscoveryNamespacesFilter(
 	namespaces kclient.Client[*corev1.Namespace],
 	mesh mesh.Watcher,
 	stop <-chan struct{},
+	discoverySelectors []*meshapi.LabelSelector,
 ) kubetypes.DynamicObjectFilter {
 	// convert LabelSelectors to Selectors
 	f := &discoveryNamespacesFilter{
 		namespaces:          namespaces,
 		discoveryNamespaces: sets.New[string](),
 	}
+
+	log.Info("discovery selectors:")
+	log.Info(discoverySelectors)
+
 	mesh.AddMeshHandler(func() {
-		f.selectorsChanged(mesh.Mesh().GetDiscoverySelectors(), true)
+		f.selectorsChanged(discoverySelectors, true)
 	})
 
 	namespaces.AddEventHandler(controllers.EventHandler[*corev1.Namespace]{
@@ -96,7 +101,7 @@ func NewDiscoveryNamespacesFilter(
 	// Start namespaces and wait for it to be ready now. This is required for subsequent users, so we want to block
 	namespaces.Start(stop)
 	kube.WaitForCacheSync("discovery filter", stop, namespaces.HasSynced)
-	f.selectorsChanged(mesh.Mesh().GetDiscoverySelectors(), false)
+	f.selectorsChanged(discoverySelectors, false)
 	return f
 }
 

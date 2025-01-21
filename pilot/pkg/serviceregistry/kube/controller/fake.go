@@ -96,6 +96,7 @@ func NewFakeControllerWithOptions(t test.Failer, opts FakeControllerOptions) (*F
 		kclient.New[*corev1.Namespace](opts.Client),
 		opts.MeshWatcher,
 		stop,
+		opts.MeshWatcher.Mesh().GetDiscoverySelectors(),
 	)
 	kubelib.SetObjectFilter(opts.Client, f)
 

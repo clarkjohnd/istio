@@ -264,7 +264,12 @@ func TestObjectFilter(t *testing.T) {
 	clusterID := cluster.ID("config")
 	// For primary cluster, we need to set it up ourselves.
 	namespaces := kclient.New[*v1.Namespace](tc.client)
-	filter := namespace.NewDiscoveryNamespacesFilter(namespaces, mesh, stop)
+	filter := namespace.NewDiscoveryNamespacesFilter(
+		namespaces,
+		mesh,
+		stop,
+		mesh.Mesh().GetDiscoverySelectors(),
+	)
 	tc.client = kube.SetObjectFilter(tc.client, filter)
 
 	tc.secrets = clienttest.NewWriter[*v1.Secret](t, tc.client)

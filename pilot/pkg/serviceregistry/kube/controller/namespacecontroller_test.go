@@ -49,6 +49,7 @@ func TestNamespaceController(t *testing.T) {
 		kclient.New[*v1.Namespace](client),
 		meshWatcher,
 		stop,
+		meshWatcher.Mesh().GetDiscoverySelectors(),
 	)
 	kube.SetObjectFilter(client, discoveryNamespacesFilter)
 	nc := NewNamespaceController(client, watcher)
@@ -164,6 +165,7 @@ func TestNamespaceControllerWithDiscoverySelectors(t *testing.T) {
 		kclient.New[*v1.Namespace](client),
 		meshWatcher,
 		stop,
+		meshWatcher.Mesh().GetDiscoverySelectors(),
 	)
 	kube.SetObjectFilter(client, discoveryNamespacesFilter)
 	nc := NewNamespaceController(client, watcher)
@@ -234,6 +236,7 @@ func TestNamespaceControllerDiscovery(t *testing.T) {
 		kclient.New[*v1.Namespace](client),
 		meshWatcher,
 		stop,
+		meshWatcher.Mesh().GetDiscoverySelectors(),
 	)
 	kube.SetObjectFilter(client, discoveryNamespacesFilter)
 	nc := NewNamespaceController(client, watcher)

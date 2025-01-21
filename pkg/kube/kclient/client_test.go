@@ -461,6 +461,7 @@ func TestFilterNamespace(t *testing.T) {
 		kclient.New[*corev1.Namespace](c),
 		meshWatcher,
 		test.NewStop(t),
+		meshWatcher.Mesh().GetDiscoverySelectors(),
 	)
 	namespaces := kclient.NewFiltered[*corev1.Namespace](c, kubetypes.Filter{
 		ObjectFilter: discoveryNamespacesFilter,
@@ -506,6 +507,7 @@ func TestFilter(t *testing.T) {
 		namespaces,
 		meshWatcher,
 		test.NewStop(t),
+		meshWatcher.Mesh().GetDiscoverySelectors(),
 	)
 	deployments := kclient.NewFiltered[*appsv1.Deployment](c, kubetypes.Filter{
 		ObjectFilter: discoveryNamespacesFilter,
@@ -595,6 +597,7 @@ func TestFilterClusterScoped(t *testing.T) {
 		namespaces,
 		meshWatcher,
 		test.NewStop(t),
+		meshWatcher.Mesh().GetDiscoverySelectors(),
 	)
 	nodes := kclient.NewFiltered[*corev1.Node](c, kubetypes.Filter{
 		ObjectFilter: discoveryNamespacesFilter,
@@ -628,6 +631,7 @@ func TestFilterDeadlock(t *testing.T) {
 		namespaces,
 		meshWatcher,
 		stop,
+		meshWatcher.Mesh().GetDiscoverySelectors(),
 	)
 
 	// Create some random client

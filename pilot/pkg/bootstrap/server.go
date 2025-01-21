@@ -289,7 +289,12 @@ func NewServer(args *PilotArgs, initFuncs ...func(*Server)) (*Server, error) {
 	if s.kubeClient != nil {
 		// Build a namespace watcher. This must have no filter, since this is our input to the filter itself.
 		namespaces := kclient.New[*corev1.Namespace](s.kubeClient)
-		filter := namespace.NewDiscoveryNamespacesFilter(namespaces, s.environment.Watcher, s.internalStop)
+		filter := namespace.NewDiscoveryNamespacesFilter(
+			namespaces,
+			s.environment.Watcher,
+			s.internalStop,
+			s.environment.Mesh().GetDiscoverySelectors(),
+		)
 		s.kubeClient = kubelib.SetObjectFilter(s.kubeClient, filter)
 	}
 

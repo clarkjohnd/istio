@@ -44,6 +44,8 @@ type Cluster struct {
 	initialSync *atomic.Bool
 	// initialSyncTimeout is set when RunAndWait timed out
 	initialSyncTimeout *atomic.Bool
+	//
+	remoteMesh remoteMeshConfig
 }
 
 type ACTION int
@@ -80,7 +82,12 @@ func (c *Cluster) Run(mesh mesh.Watcher, handlers []handler, action ACTION) {
 	// This must be done before we build components, so they can access the filter.
 	namespaces := kclient.New[*corev1.Namespace](c.Client)
 	// This will start a namespace informer and wait for it to be ready. So we must start it in a go routine to avoid blocking.
-	filter := filter.NewDiscoveryNamespacesFilter(namespaces, mesh, c.stop)
+	filter := filter.NewDiscoveryNamespacesFilter(
+		namespaces,
+		mesh,
+		c.stop,
+		c.remoteMesh.DiscoverySelectors,
+	)
 	kube.SetObjectFilter(c.Client, filter)
 
 	syncers := make([]ComponentConstraint, 0, len(handlers))
@@ -137,4 +144,14 @@ func (c *Cluster) Closed() bool {
 
 func (c *Cluster) SyncDidTimeout() bool {
 	return !c.initialSync.Load() && c.initialSyncTimeout.Load()
+}
+
+// DefaultRemoteMeshConfig returns the default mesh config.
+// This is merged with values from the remote mesh config map.
+// There are currently no defaults.
+func DefaultRemoteMesh() *remoteMeshConfig {
+
+	// Defaults matching the standard install
+	// order matches the generated remote mesh config.
+	return &remoteMeshConfig{}
 }

@@ -36,6 +36,7 @@ import (
 	"istio.io/istio/pkg/log"
 	"istio.io/istio/pkg/monitoring"
 	"istio.io/istio/pkg/slices"
+	"istio.io/istio/pkg/util/protomarshal"
 	"istio.io/istio/pkg/util/sets"
 )
 
@@ -245,11 +246,25 @@ func DefaultBuildClientsFromConfig(kubeConfig []byte, clusterID cluster.ID, conf
 	return clients, nil
 }
 
+func parseRemoteMeshConfig(yaml string) (remoteMeshConfig, error) {
+
+	remoteMeshConfigStruct := remoteMeshConfig{}
+	if err := protomarshal.ApplyYAML(yaml, remoteMeshConfigStruct); err != nil {
+		return c, fmt.Errorf("could not parse configuration values: %v", err)
+	}
+}
+
 func (c *Controller) createRemoteCluster(kubeConfig []byte, clusterID string) (*Cluster, error) {
 	clients, err := c.ClientBuilder(kubeConfig, cluster.ID(clusterID), c.configOverrides...)
 	if err != nil {
 		return nil, err
 	}
+
+	remoteMeshConfig, err := parseRemoteMeshConfig(string(kubeConfig))
+	if err != nil {
+		return nil, err
+	}
+
 	return &Cluster{
 		ID:     cluster.ID(clusterID),
 		Client: clients,
@@ -258,6 +273,7 @@ func (c *Controller) createRemoteCluster(kubeConfig []byte, clusterID string) (*
 		initialSync:        atomic.NewBool(false),
 		initialSyncTimeout: atomic.NewBool(false),
 		kubeConfigSha:      sha256.Sum256(kubeConfig),
+		remoteMeshConfig:   *remoteMeshConfig,
 	}, nil
 }
 
@@ -298,6 +314,7 @@ func (c *Controller) addSecret(name types.NamespacedName, s *corev1.Secret) erro
 		logger.Infof("%s cluster", action)
 
 		remoteCluster, err := c.createRemoteCluster(kubeConfig, clusterID)
+		logger.Info(remoteCluster)
 		if err != nil {
 			logger.Errorf("%s cluster: create remote cluster failed: %v", action, err)
 			errs = multierror.Append(errs, err)
